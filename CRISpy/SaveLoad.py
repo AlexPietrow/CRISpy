@@ -1,6 +1,12 @@
 """
 Save and load routines to work with LPcubes and save fits or LPcubes
 """
+import CRISpy as cp
+import CRISpy.Reduction as red
+
+import numpy as np
+import matplotlib.pyplot as plt
+
 
 def make_header(image):
     ''' Creates header for La Palma images. '''
@@ -269,3 +275,43 @@ def get(filename, index, silent=True):
     image = np.flipud(image)
                       
     return image
+
+###
+# full_cube()
+###
+def full_cube(cube, nt , nw, ns=4, size=860, bin=False):
+    '''
+        Creates a 5D python readable from an lp cube. These files get big, so watch your RAM.
+        INPUT:
+        cube : filename, has to be .icube or .fcube
+        nt   : number of timesteps that you want to use
+        nw   : number of wavelength steps in the cube.
+        ns   : number of stokes parameters. Default = 4
+        size : clip parameter that resizes x,y into a square shape. Default = 860
+        bin  : Bin parameter to bin image. Default = False
+        
+        OUTPUT:
+        5d cube of shape [nt,ns,nw,nx,ny]
+        
+        AUTHOR: Alex
+        
+        EXAMPLE:
+        cube_new = full_cube(cube, 3 , 23, bin=4)
+        returns a 5D cube that contains 3 scans and is binned down by 4.
+        '''
+    nx = ny = size
+    if bin:
+        im_mask_complete = np.zeros((nt,ns,nw,nx/bin,ny/bin))
+    else:
+        im_mask_complete = np.zeros((nt,ns,nw,nx,ny))
+    for i in range(nt):
+        for j in range(ns):
+            print(i,j)
+            cube_array = cp.make_array(cube, 'w', t=i, s=j)[:, 0:size, 0:size]
+            im_mask = cube_array
+            #im_mask = fftclean(cube_array, plot=0, cut1=[418,426,415,419], cut2=[434,439, 440,446])
+            if bin:
+                im_mask = red.binpic5d(im_mask, n=bin)
+            im_mask_complete[i,j] = im_mask
+
+    return im_mask_complete

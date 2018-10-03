@@ -13,12 +13,40 @@
     <p><tt>Save&nbsp;and&nbsp;load&nbsp;routines&nbsp;to&nbsp;work&nbsp;with&nbsp;LPcubes&nbsp;and&nbsp;save&nbsp;fits&nbsp;or&nbsp;LPcubes</tt></p>
 <p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="CRISpy.html">CRISpy</a><br>
+</td><td width="25%" valign=top><a href="numpy.html">numpy</a><br>
+</td><td width="25%" valign=top><a href="matplotlib.pyplot.html">matplotlib.pyplot</a><br>
+</td><td width="25%" valign=top><a href="CRISpy.Reduction.html">CRISpy.Reduction</a><br>
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#eeaa77">
 <td colspan=3 valign=bottom>&nbsp;<br>
 <font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
     
 <tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
-<td width="100%"><dl><dt><a name="-get"><strong>get</strong></a>(filename, index, silent<font color="#909090">=True</font>)</dt><dd><tt>Opens&nbsp;crisp&nbsp;files&nbsp;into&nbsp;python<br>
+<td width="100%"><dl><dt><a name="-full_cube"><strong>full_cube</strong></a>(cube, nt, nw, ns<font color="#909090">=4</font>, size<font color="#909090">=860</font>, bin<font color="#909090">=False</font>)</dt><dd><tt>Creates&nbsp;a&nbsp;5D&nbsp;python&nbsp;readable&nbsp;from&nbsp;an&nbsp;lp&nbsp;cube.&nbsp;These&nbsp;files&nbsp;get&nbsp;big,&nbsp;so&nbsp;watch&nbsp;your&nbsp;RAM.<br>
+INPUT:<br>
+cube&nbsp;:&nbsp;filename,&nbsp;has&nbsp;to&nbsp;be&nbsp;.icube&nbsp;or&nbsp;.fcube<br>
+nt&nbsp;&nbsp;&nbsp;:&nbsp;number&nbsp;of&nbsp;timesteps&nbsp;that&nbsp;you&nbsp;want&nbsp;to&nbsp;use<br>
+nw&nbsp;&nbsp;&nbsp;:&nbsp;number&nbsp;of&nbsp;wavelength&nbsp;steps&nbsp;in&nbsp;the&nbsp;cube.<br>
+ns&nbsp;&nbsp;&nbsp;:&nbsp;number&nbsp;of&nbsp;stokes&nbsp;parameters.&nbsp;Default&nbsp;=&nbsp;4<br>
+size&nbsp;:&nbsp;clip&nbsp;parameter&nbsp;that&nbsp;resizes&nbsp;x,y&nbsp;into&nbsp;a&nbsp;square&nbsp;shape.&nbsp;Default&nbsp;=&nbsp;860<br>
+bin&nbsp;&nbsp;:&nbsp;Bin&nbsp;parameter&nbsp;to&nbsp;bin&nbsp;image.&nbsp;Default&nbsp;=&nbsp;False<br>
+&nbsp;<br>
+OUTPUT:<br>
+5d&nbsp;cube&nbsp;of&nbsp;shape&nbsp;[nt,ns,nw,nx,ny]<br>
+&nbsp;<br>
+AUTHOR:&nbsp;Alex<br>
+&nbsp;<br>
+EXAMPLE:<br>
+cube_new&nbsp;=&nbsp;<a href="#-full_cube">full_cube</a>(cube,&nbsp;3&nbsp;,&nbsp;23,&nbsp;bin=4)<br>
+returns&nbsp;a&nbsp;5D&nbsp;cube&nbsp;that&nbsp;contains&nbsp;3&nbsp;scans&nbsp;and&nbsp;is&nbsp;binned&nbsp;down&nbsp;by&nbsp;4.</tt></dd></dl>
+ <dl><dt><a name="-get"><strong>get</strong></a>(filename, index, silent<font color="#909090">=True</font>)</dt><dd><tt>Opens&nbsp;crisp&nbsp;files&nbsp;into&nbsp;python<br>
 &nbsp;<br>
 INPUT:<br>
 filename&nbsp;:&nbsp;file&nbsp;to&nbsp;be&nbsp;opened.&nbsp;Has&nbsp;to&nbsp;be&nbsp;.icube&nbsp;or&nbsp;.fcube<br>
