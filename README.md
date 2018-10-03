@@ -1,4 +1,4 @@
 # CRISpy
 Python module to work with CRISP data. 
 
-Find code documentation here: https://rawgit.com/AlexPietrow/CRISPy/master/CRISpy.html?b=0
+Find code documentation here: http://htmlpreview.github.io/?https://github.com/AlexPietrow/CRISPy/blob/master/CRISpy.html
