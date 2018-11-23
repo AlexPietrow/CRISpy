@@ -155,7 +155,6 @@ def PCA(cube_array, PCA_N):
     return Mn(PCA_N)
 
 def animatecrisp(cube, dim, nw, nt, cut=50, t=0, s=0, w=0, ns=4, interval=75, cmap='gray'):
-    fig = plt.figure()
     '''
         crispex cubes are formated as an entire scan for one time and stokes.
         
@@ -164,6 +163,8 @@ def animatecrisp(cube, dim, nw, nt, cut=50, t=0, s=0, w=0, ns=4, interval=75, cm
         
         
     '''
+    fig = plt.figure()
+
     
     #plot once to establish window
     idx = t*nw*ns + s*nw + w

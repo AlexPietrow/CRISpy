@@ -1,3 +1,5 @@
+from scipy.io.idl import readsav as restore
+
 '''
 CRISpy is a python module that allows for working with CRISP and CHROMIS data from the SST.
 
@@ -124,6 +126,111 @@ def animate_cube(cube_array, cut=True, mn=0, sd=0, interval=75, cmap='hot'):
     ani = animation.FuncAnimation(fig, updatefig, frames=cube_array.shape[0],                                  interval=interval, blit=True)
     plt.colorbar()
     plt.show()
+
+def spec_limb_dark(wavelength, mu, wavetable):
+    wavetable, A0, A1, A2, A3, A4, A5 = np.loadtxt('limbdarkening.dat', unpack=True)
+    waveltable *= 10 #covert nm to A
+    
+    lamdown = np.where(wavetable < wavelength)[-1]
+    lamup   = np.where(wavetable > wavetable)[0]
+    
+    #;;select the right paramters for the wavelength
+    A = np.array([[A0[lamdown], A1[lamdown], A2[lamdown], A3[lamdown],A4[lamdown],A5[lamdown]],[A0[lamup], A1[lamup], A2[lamup], A3[lamup],A4[lamup],A5[lamup]]])
+    
+    #;;linear interpolation between all parameters
+    Aint = np.zeros(6)
+    factor = 0
+    for i in range(6):
+        Aint[i] = A[i,0]+(A[i,1]-A[i,0])*(wavelength - wavetable[lamdown])/(wavetable[lamup]-wavetable[lamdown])
+    
+    #;;calculate the limb brightening factor
+    for i in range(6):
+        factor += Aint[i]*mu**i
+    
+    return factor
+
+def calib_to_atlas(input_profile, wavelengths, mu=1, I_lambda=False, CGS=False, instrument_profile=0):
+    '''
+        Input Profile   :   Array of QS patch along spectral range
+        wavelengths     :   from spectfile.8542.idlsave file
+    '''
+    #get spectral range
+    wav_low     = wavelengths[0]
+    wav_upp     = wavelengths[-1]
+    wavrange    = wav_upp - wav_low
+    nwav        = len(wavelengths)
+    wav_spacing = np.mean((wavelengths - np.roll(wavelengths,1))[1:-1])
+
+    #read limb darkening
+    wavetable, A0, A1, A2, A3, A4, A5 = np.loadtxt('CRISpy/data/limbdarkening.dat', unpack=True)
+    wavetable *= 10 #covert nm to A
+
+    cols = np.array([A0, A1, A2, A3, A4, A5])
+
+    # get atlas profile over that spectral range
+    # Units are: J/m^2/s/sr/Hz, i.e., I_nu
+    atlas = restore('CRISPy/data/fts_disk_center_SI.idlsave')
+    ftsint = atlas['ftsint_si']
+
+    ## convert to CGS
+    if CGS:
+        #Account for erg -> J and cm^-2 -> m^-2 conversion factors
+        ftsint /= (1E-7 / (1E-2)**2)
+
+    ## Convert I_nu to I_lambda
+    if I_lambda:
+        ftsint /= (ftswav**2 / 3.E18)
+
+    fts_select          = len(np.where((ftswav >= wav_low) & (ftswav <= wav_upp))[0])
+    fts_extra_select    = len(np.where((ftswav >= wav_low - wavrange/2.) & (ftswav <= wav_upp + wavrange/2.)))
+
+    #; Convolve atlas profile with instrumental profile if given
+    if instrument_profile.shape > 1:
+        instr_profile = restore('CRISPy/data/crisp.8542.instr_profile.idlsave')['instr_profile']
+        fts_spacing = np.mean( ( ftswav[fts_extra_select] - np.roll(ftswav[fts_extra_select,1]) )[1:-1] )
+        ipr_spacing = np.mean( ( instr_profile[0,:] - np.roll(instr_profile[0,:],1) )[1:-2] )
+        # Get grid on same spacing as atlas
+        fine_grid = np.arange( ( len(instr_profile[0,:])-1 ) * ipr_spacing/fts_spacing + 1 ) * fts_spacing
+        #; Interpolate kernel to atlas grid
+        kernel = numpy.interp(fine_grid, instr_profile[1,:], instr_profile[0,:]) # could be wrong
+        #; Convolve atlas profile with instrument profile
+        plt.plot(ftswav[fts_extra_select, ftsint[fts_extra_select]])
+        ftsint[fts_extra_select] = np.convolve(ftsint[fts_extra_select], kernel) #could be wrong
+        plt.plot(ftswav[fts_extra_select, ftsint[fts_extra_select]])
+        plt.title('Convolved atlas profile with instrument profile')
+        plt.show()
+
+    #calibrate wavemin skipped
+
+    #; Apply limb-darkening to wavelength position
+    nwav = len(wavelength)
+    ftsint_corr = np.zeroes(nwav)
+    for lp in range(nwav):
+        dummy = np.min(np.abs(ftswav-wavelength[lp]))
+        wherewav = np.where(np.abs(ftswav-wavelength[lp]) == np.min(np.abs(ftswav-wavelength[lp]))) #I think
+        factor = spec_limb_dark(ftswav[wherewav], mu, wavetable=wavetable)
+        ftsint_corr[lp] = ftsint[wherewav] * factor
+
+    #  ; Scale the average profile to the values of the atlas profile (hopefully a
+    #            ; single factor for all points, otherwise use average?)
+    #skip this
+
+    if CGS == False:
+        units =  'erg/cm^2/s/sr'
+    else:
+        units = 'J/m^2/s/sr'
+
+    if I_lambda == False:
+        units += '/A'
+    else:
+        units += '/Hz'
+
+    return (wavelength, ftsint_corr, units)
+
+def restore_idl(name):
+
+
+    return restore(name)
 
 
 

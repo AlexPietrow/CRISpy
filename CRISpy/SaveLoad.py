@@ -6,6 +6,7 @@ import CRISpy.Reduction as red
 
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 
 
 def make_header(image):
@@ -84,7 +85,7 @@ def writeto(filename, image, extraheader='', dtype=None, verbose=False,
             print(('Wrote %s, %s array of shape %s' % (filename, dtype,image.shape)))
     return
 
-def write_buf(intensity, outfile, wave=None, stokes=False):
+def write_buf(intensity, outfile, wave=None, stokes=False, sp=False, path=''):
     ''' Writes crispex image and spectral cubes, for when the data is already
         resident in memory. To be used when there is ample memory for all
         the cubes.
@@ -117,13 +118,15 @@ def write_buf(intensity, outfile, wave=None, stokes=False):
     im = np.transpose(intensity, axes=ax[0])
     im = im.reshape(rs[0])
     # this is the spectral cube
-    sp = np.transpose(intensity, axes=ax[1])
-    sp = sp.reshape(rs[1])
+    if sp:
+        sp = np.transpose(intensity, axes=ax[1])
+        sp = sp.reshape(rs[1])
     # write lp.put, etc.
     # , extraheader_sep=False)
-    writeto('im_' + outfile, im, extraheader=extrahd)
+    writeto(path+'im_' + outfile, im, extraheader=extrahd)
     # , extraheader_sep=False)
-    writeto('sp_' + outfile, sp, extraheader=extrahd)
+    if sp:
+        writeto(path+'sp_' + outfile, sp, extraheader=extrahd)
     return
 
 ###
@@ -144,15 +147,43 @@ def save_fits(cube_array, name):
 ###
 #save_lpcube
 ###
-def save_lpcube(cube_array, name):
+def save_lpcube(cube_array, name, stokes=True, sp=False, path=''):
     '''
-        saves cube as lapalma cube
-        '''
+    Saves cube as lapalma cube and converts to float32
+    Also rotates them back to the correct position.
+    
+    
+    INPUT:
+        cube_array  : datacube in form of [t,s,w,x,y]
+        name        : name of file with .icube extention
+        Stokes      : flag for if data has stokes or not. Default = True
+        sp          : Save spectral cube of shape. Default = False
+        path        : Filepath where file needs to be saved. Default = ''
+        
+    Shapes data into [4, nt, nx, ny, nwave] and saves as LP cube using 'write_buff' function.
+    
+    OUTPUT:
+        Saved datafile
+        
+    EXAMPLE:
+        save_lpcube(cube_array, 'cube.icube', path='fits/')
+        
+    AUTHOR: Alex
+    '''
+    cube_array = cube_array.astype(np.float32)
+    
+    cube_shape = cube_array.shape
+    for i in range(cube_shape[0]):
+        for j in range(cube_shape[1]):
+            for k in range(cube_shape[2]):
+                cube_array[i,j,k] = np.rot90(cube_array[i,j,k],3)
+                cube_array[i,j,k] = np.flipud(cube_array[i,j,k])
+    
     new_cube = np.swapaxes(cube_array, 0,1)
     new_cube = np.swapaxes(new_cube, 2,3)
     new_cube = np.swapaxes(new_cube, 3,4)
     
-    write_buf(new_cube, name, stokes=True)
+    write_buf(new_cube, name, stokes=stokes, sp=False, path=path)
 
 #
 # LP.HEADER()
@@ -168,7 +199,7 @@ def header(filename):
         datatype, dims, nx, ny, nt, endian, ns
         
         AUTHOR: G. Vissers (ITA UiO, 2016)
-        '''
+    '''
     openfile = open(filename)
     header = openfile.read(512) # first 512 bytes is header info
     #print header
@@ -212,7 +243,7 @@ def header(filename):
         ns = 1
     else:
         startpos += len(searchstring)
-        ns = long(header[startpos:startpos+2])
+        ns = long(header[startpos:startpos+1])
     
     # Get endian
     searchstring = 'endian='
@@ -279,7 +310,7 @@ def get(filename, index, silent=True):
 ###
 # full_cube()
 ###
-def full_cube(cube, nt , nw, ns=4, size=860, bin=False):
+def full_cube(cube, nt , nw, ns=4, t0=0, size=860, bin=False):
     '''
         Creates a 5D python readable from an lp cube. These files get big, so watch your RAM.
         INPUT:
@@ -287,6 +318,7 @@ def full_cube(cube, nt , nw, ns=4, size=860, bin=False):
         nt   : number of timesteps that you want to use
         nw   : number of wavelength steps in the cube.
         ns   : number of stokes parameters. Default = 4
+        t0   : Start scan. Default=0
         size : clip parameter that resizes x,y into a square shape. Default = 860
         bin  : Bin parameter to bin image. Default = False
         
@@ -307,7 +339,7 @@ def full_cube(cube, nt , nw, ns=4, size=860, bin=False):
     for i in range(nt):
         for j in range(ns):
             print(i,j)
-            cube_array = cp.make_array(cube, 'w', t=i, s=j)[:, 0:size, 0:size]
+            cube_array = cp.make_array(cube, 'w', t=i+t0, s=j)[:, 0:size, 0:size]
             im_mask = cube_array
             #im_mask = fftclean(cube_array, plot=0, cut1=[418,426,415,419], cut2=[434,439, 440,446])
             if bin:
