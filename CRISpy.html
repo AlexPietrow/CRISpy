@@ -10,10 +10,7 @@
 <font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>CRISpy</strong></big></big></font></td
 ><td align=right valign=bottom
 ><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/Users/alex/Documents/deeppolarimetry/CRISpy/__init__.py">/Users/alex/Documents/deeppolarimetry/CRISpy/__init__.py</a></font></td></tr></table>
-    <p><tt>CRISpy&nbsp;is&nbsp;a&nbsp;python&nbsp;module&nbsp;that&nbsp;allows&nbsp;for&nbsp;working&nbsp;with&nbsp;CRISP&nbsp;and&nbsp;CHROMIS&nbsp;data&nbsp;from&nbsp;the&nbsp;SST.<br>
-&nbsp;<br>
-Subpackages:<br>
-SaveLoad&nbsp;:&nbsp;Save&nbsp;and&nbsp;load&nbsp;routines&nbsp;to&nbsp;deal&nbsp;with&nbsp;LPcubes&nbsp;and&nbsp;fits&nbsp;files</tt></p>
+    <p></p>
 <p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#aa55cc">
@@ -43,6 +40,8 @@ INPUT:<br>
 &nbsp;<br>
 OUTPUT:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;animated&nbsp;window&nbsp;going&nbsp;through&nbsp;the&nbsp;cube.</tt></dd></dl>
+ <dl><dt><a name="-calib_to_atlas"><strong>calib_to_atlas</strong></a>(input_profile, wavelengths, mu<font color="#909090">=1</font>, I_lambda<font color="#909090">=False</font>, CGS<font color="#909090">=False</font>, instrument_profile<font color="#909090">=0</font>)</dt><dd><tt>Input&nbsp;Profile&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;Array&nbsp;of&nbsp;QS&nbsp;patch&nbsp;along&nbsp;spectral&nbsp;range<br>
+wavelengths&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;from&nbsp;spectfile.8542.idlsave&nbsp;file</tt></dd></dl>
  <dl><dt><a name="-make_array"><strong>make_array</strong></a>(cube, dim, cut<font color="#909090">=50</font>, t<font color="#909090">=0</font>, s<font color="#909090">=0</font>, w<font color="#909090">=0</font>, nw<font color="#909090">=23</font>, nt<font color="#909090">=20</font>, ns<font color="#909090">=4</font>)</dt><dd><tt>Make&nbsp;a&nbsp;3d&nbsp;cube&nbsp;in&nbsp;a&nbsp;chosen&nbsp;direction.&nbsp;x,y,[t,s&nbsp;or&nbsp;w]<br>
 &nbsp;<br>
 INPUT:<br>
@@ -68,6 +67,8 @@ EXAMPLE:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;cube_w&nbsp;=&nbsp;<a href="#-make_array">make_array</a>(cube,&nbsp;'w')&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#&nbsp;returns&nbsp;a&nbsp;wavelength&nbsp;cut&nbsp;cube&nbsp;@&nbsp;s=0&nbsp;and&nbsp;t=0.<br>
 &nbsp;&nbsp;&nbsp;&nbsp;cube_w&nbsp;=&nbsp;<a href="#-make_array">make_array</a>(cube,&nbsp;'w',&nbsp;s=1,&nbsp;t=3)&nbsp;&nbsp;#&nbsp;returns&nbsp;a&nbsp;wavelength&nbsp;cut&nbsp;cube&nbsp;@&nbsp;s=1&nbsp;and&nbsp;t=3.<br>
 &nbsp;&nbsp;&nbsp;&nbsp;cube_t&nbsp;=&nbsp;<a href="#-make_array">make_array</a>(cube,&nbsp;'t',&nbsp;s=2,&nbsp;w=10)&nbsp;#&nbsp;returns&nbsp;a&nbsp;timeseries&nbsp;in&nbsp;line&nbsp;core&nbsp;@&nbsp;s=2</tt></dd></dl>
+ <dl><dt><a name="-restore_idl"><strong>restore_idl</strong></a>(name)</dt></dl>
+ <dl><dt><a name="-spec_limb_dark"><strong>spec_limb_dark</strong></a>(wavelength, mu, wavetable)</dt></dl>
 </td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#55aa55">
