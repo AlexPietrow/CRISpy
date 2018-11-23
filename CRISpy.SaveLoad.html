@@ -19,22 +19,24 @@
     
 <tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
 <td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="CRISpy.html">CRISpy</a><br>
-</td><td width="25%" valign=top><a href="numpy.html">numpy</a><br>
-</td><td width="25%" valign=top><a href="matplotlib.pyplot.html">matplotlib.pyplot</a><br>
+<a href="numpy.html">numpy</a><br>
+</td><td width="25%" valign=top><a href="os.html">os</a><br>
+<a href="matplotlib.pyplot.html">matplotlib.pyplot</a><br>
 </td><td width="25%" valign=top><a href="CRISpy.Reduction.html">CRISpy.Reduction</a><br>
-</td></tr></table></td></tr></table><p>
+</td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#eeaa77">
 <td colspan=3 valign=bottom>&nbsp;<br>
 <font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
     
 <tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
-<td width="100%"><dl><dt><a name="-full_cube"><strong>full_cube</strong></a>(cube, nt, nw, ns<font color="#909090">=4</font>, size<font color="#909090">=860</font>, bin<font color="#909090">=False</font>)</dt><dd><tt>Creates&nbsp;a&nbsp;5D&nbsp;python&nbsp;readable&nbsp;from&nbsp;an&nbsp;lp&nbsp;cube.&nbsp;These&nbsp;files&nbsp;get&nbsp;big,&nbsp;so&nbsp;watch&nbsp;your&nbsp;RAM.<br>
+<td width="100%"><dl><dt><a name="-full_cube"><strong>full_cube</strong></a>(cube, nt, nw, ns<font color="#909090">=4</font>, t0<font color="#909090">=0</font>, size<font color="#909090">=860</font>, bin<font color="#909090">=False</font>)</dt><dd><tt>Creates&nbsp;a&nbsp;5D&nbsp;python&nbsp;readable&nbsp;from&nbsp;an&nbsp;lp&nbsp;cube.&nbsp;These&nbsp;files&nbsp;get&nbsp;big,&nbsp;so&nbsp;watch&nbsp;your&nbsp;RAM.<br>
 INPUT:<br>
 cube&nbsp;:&nbsp;filename,&nbsp;has&nbsp;to&nbsp;be&nbsp;.icube&nbsp;or&nbsp;.fcube<br>
 nt&nbsp;&nbsp;&nbsp;:&nbsp;number&nbsp;of&nbsp;timesteps&nbsp;that&nbsp;you&nbsp;want&nbsp;to&nbsp;use<br>
 nw&nbsp;&nbsp;&nbsp;:&nbsp;number&nbsp;of&nbsp;wavelength&nbsp;steps&nbsp;in&nbsp;the&nbsp;cube.<br>
 ns&nbsp;&nbsp;&nbsp;:&nbsp;number&nbsp;of&nbsp;stokes&nbsp;parameters.&nbsp;Default&nbsp;=&nbsp;4<br>
+t0&nbsp;&nbsp;&nbsp;:&nbsp;Start&nbsp;scan.&nbsp;Default=0<br>
 size&nbsp;:&nbsp;clip&nbsp;parameter&nbsp;that&nbsp;resizes&nbsp;x,y&nbsp;into&nbsp;a&nbsp;square&nbsp;shape.&nbsp;Default&nbsp;=&nbsp;860<br>
 bin&nbsp;&nbsp;:&nbsp;Bin&nbsp;parameter&nbsp;to&nbsp;bin&nbsp;image.&nbsp;Default&nbsp;=&nbsp;False<br>
 &nbsp;<br>
@@ -76,8 +78,27 @@ AUTHOR:&nbsp;G.&nbsp;Vissers&nbsp;(ITA&nbsp;UiO,&nbsp;2016)</tt></dd></dl>
 &nbsp;<br>
 Saves&nbsp;an&nbsp;array&nbsp;to&nbsp;fits&nbsp;file.<br>
 TODO:&nbsp;add&nbsp;header</tt></dd></dl>
- <dl><dt><a name="-save_lpcube"><strong>save_lpcube</strong></a>(cube_array, name)</dt><dd><tt>saves&nbsp;cube&nbsp;as&nbsp;lapalma&nbsp;cube</tt></dd></dl>
- <dl><dt><a name="-write_buf"><strong>write_buf</strong></a>(intensity, outfile, wave<font color="#909090">=None</font>, stokes<font color="#909090">=False</font>)</dt><dd><tt>Writes&nbsp;crispex&nbsp;image&nbsp;and&nbsp;spectral&nbsp;cubes,&nbsp;for&nbsp;when&nbsp;the&nbsp;data&nbsp;is&nbsp;already<br>
+ <dl><dt><a name="-save_lpcube"><strong>save_lpcube</strong></a>(cube_array, name, stokes<font color="#909090">=True</font>, sp<font color="#909090">=False</font>, path<font color="#909090">=''</font>)</dt><dd><tt>Saves&nbsp;cube&nbsp;as&nbsp;lapalma&nbsp;cube&nbsp;and&nbsp;converts&nbsp;to&nbsp;float32<br>
+Also&nbsp;rotates&nbsp;them&nbsp;back&nbsp;to&nbsp;the&nbsp;correct&nbsp;position.<br>
+&nbsp;<br>
+&nbsp;<br>
+INPUT:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;cube_array&nbsp;&nbsp;:&nbsp;datacube&nbsp;in&nbsp;form&nbsp;of&nbsp;[t,s,w,x,y]<br>
+&nbsp;&nbsp;&nbsp;&nbsp;name&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;name&nbsp;of&nbsp;file&nbsp;with&nbsp;.icube&nbsp;extention<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Stokes&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;flag&nbsp;for&nbsp;if&nbsp;data&nbsp;has&nbsp;stokes&nbsp;or&nbsp;not.&nbsp;Default&nbsp;=&nbsp;True<br>
+&nbsp;&nbsp;&nbsp;&nbsp;sp&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;Save&nbsp;spectral&nbsp;cube&nbsp;of&nbsp;shape.&nbsp;Default&nbsp;=&nbsp;False<br>
+&nbsp;&nbsp;&nbsp;&nbsp;path&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;Filepath&nbsp;where&nbsp;file&nbsp;needs&nbsp;to&nbsp;be&nbsp;saved.&nbsp;Default&nbsp;=&nbsp;''<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<br>
+Shapes&nbsp;data&nbsp;into&nbsp;[4,&nbsp;nt,&nbsp;nx,&nbsp;ny,&nbsp;nwave]&nbsp;and&nbsp;saves&nbsp;as&nbsp;LP&nbsp;cube&nbsp;using&nbsp;'write_buff'&nbsp;function.<br>
+&nbsp;<br>
+OUTPUT:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Saved&nbsp;datafile<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<br>
+EXAMPLE:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#-save_lpcube">save_lpcube</a>(cube_array,&nbsp;'cube.icube',&nbsp;path='fits/')<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<br>
+AUTHOR:&nbsp;Alex</tt></dd></dl>
+ <dl><dt><a name="-write_buf"><strong>write_buf</strong></a>(intensity, outfile, wave<font color="#909090">=None</font>, stokes<font color="#909090">=False</font>, sp<font color="#909090">=False</font>, path<font color="#909090">=''</font>)</dt><dd><tt>Writes&nbsp;crispex&nbsp;image&nbsp;and&nbsp;spectral&nbsp;cubes,&nbsp;for&nbsp;when&nbsp;the&nbsp;data&nbsp;is&nbsp;already<br>
 resident&nbsp;in&nbsp;memory.&nbsp;To&nbsp;be&nbsp;used&nbsp;when&nbsp;there&nbsp;is&nbsp;ample&nbsp;memory&nbsp;for&nbsp;all<br>
 the&nbsp;cubes.<br>
 &nbsp;<br>
