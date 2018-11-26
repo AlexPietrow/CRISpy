@@ -310,7 +310,7 @@ def get(filename, index, silent=True):
 ###
 # full_cube()
 ###
-def full_cube(cube, nt , nw, ns=4, t0=0, size=860, bin=False):
+def full_cube_old(cube, nt , nw, ns=4, t0=0, size=860, bin=False):
     '''
         Creates a 5D python readable from an lp cube. These files get big, so watch your RAM.
         INPUT:
@@ -347,3 +347,40 @@ def full_cube(cube, nt , nw, ns=4, t0=0, size=860, bin=False):
             im_mask_complete[i,j] = im_mask
 
     return im_mask_complete
+
+def full_cube(cube, nw, ns=4, trim=20):
+    '''
+        Creates a 5D python readable from an lp cube. These files get big, so watch your RAM.
+        INPUT:
+        cube : filename, has to be .icube or .fcube
+        nw   : number of wavelength steps in the cube.
+        ns   : number of stokes parameters. Default = 4
+        trim : Trim off x pixels from each edge. Default = 20px
+        
+        OUTPUT:
+        5d cube of shape [nt,ns,nw,nx,ny]
+        
+        AUTHOR: Alex
+        
+        EXAMPLE:
+        cube_new = full_cube(cube, 23)
+        returns a 5D cube in proper format
+    '''
+    if ns == 4 :
+        header = sl.header(cube)
+        nt = header[4]/nw/ns
+        nx = header[2]
+        ny = header[3]
+        cube_array =np.memmap(cube, shape=(nt,ns,nw,nx,ny), offset=512, dtype= 'int16', mode='r')
+    elif ns == 0 :
+        header = sl.header(cube)
+        nt = header[4]/nw
+        nx = header[2]
+        ny = header[3]
+        cube_array =np.memmap(cube, shape=(nt,nw,nx,ny), offset=512, dtype= 'int16', mode='r')
+    else:
+        raise ValueError("Stokes must be 0 or 4")
+
+    return cube_array
+
+
