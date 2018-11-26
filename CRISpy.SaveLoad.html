@@ -30,7 +30,22 @@
 <font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
     
 <tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
-<td width="100%"><dl><dt><a name="-full_cube"><strong>full_cube</strong></a>(cube, nt, nw, ns<font color="#909090">=4</font>, t0<font color="#909090">=0</font>, size<font color="#909090">=860</font>, bin<font color="#909090">=False</font>)</dt><dd><tt>Creates&nbsp;a&nbsp;5D&nbsp;python&nbsp;readable&nbsp;from&nbsp;an&nbsp;lp&nbsp;cube.&nbsp;These&nbsp;files&nbsp;get&nbsp;big,&nbsp;so&nbsp;watch&nbsp;your&nbsp;RAM.<br>
+<td width="100%"><dl><dt><a name="-full_cube"><strong>full_cube</strong></a>(cube, nw, ns<font color="#909090">=4</font>, trim<font color="#909090">=20</font>)</dt><dd><tt>Creates&nbsp;a&nbsp;5D&nbsp;python&nbsp;readable&nbsp;from&nbsp;an&nbsp;lp&nbsp;cube.&nbsp;These&nbsp;files&nbsp;get&nbsp;big,&nbsp;so&nbsp;watch&nbsp;your&nbsp;RAM.<br>
+INPUT:<br>
+cube&nbsp;:&nbsp;filename,&nbsp;has&nbsp;to&nbsp;be&nbsp;.icube&nbsp;or&nbsp;.fcube<br>
+nw&nbsp;&nbsp;&nbsp;:&nbsp;number&nbsp;of&nbsp;wavelength&nbsp;steps&nbsp;in&nbsp;the&nbsp;cube.<br>
+ns&nbsp;&nbsp;&nbsp;:&nbsp;number&nbsp;of&nbsp;stokes&nbsp;parameters.&nbsp;Default&nbsp;=&nbsp;4<br>
+trim&nbsp;:&nbsp;Trim&nbsp;off&nbsp;x&nbsp;pixels&nbsp;from&nbsp;each&nbsp;edge.&nbsp;Default&nbsp;=&nbsp;20px<br>
+&nbsp;<br>
+OUTPUT:<br>
+5d&nbsp;cube&nbsp;of&nbsp;shape&nbsp;[nt,ns,nw,nx,ny]<br>
+&nbsp;<br>
+AUTHOR:&nbsp;Alex<br>
+&nbsp;<br>
+EXAMPLE:<br>
+cube_new&nbsp;=&nbsp;<a href="#-full_cube">full_cube</a>(cube,&nbsp;23)<br>
+returns&nbsp;a&nbsp;5D&nbsp;cube&nbsp;in&nbsp;proper&nbsp;format</tt></dd></dl>
+ <dl><dt><a name="-full_cube_old"><strong>full_cube_old</strong></a>(cube, nt, nw, ns<font color="#909090">=4</font>, t0<font color="#909090">=0</font>, size<font color="#909090">=860</font>, bin<font color="#909090">=False</font>)</dt><dd><tt>Creates&nbsp;a&nbsp;5D&nbsp;python&nbsp;readable&nbsp;from&nbsp;an&nbsp;lp&nbsp;cube.&nbsp;These&nbsp;files&nbsp;get&nbsp;big,&nbsp;so&nbsp;watch&nbsp;your&nbsp;RAM.<br>
 INPUT:<br>
 cube&nbsp;:&nbsp;filename,&nbsp;has&nbsp;to&nbsp;be&nbsp;.icube&nbsp;or&nbsp;.fcube<br>
 nt&nbsp;&nbsp;&nbsp;:&nbsp;number&nbsp;of&nbsp;timesteps&nbsp;that&nbsp;you&nbsp;want&nbsp;to&nbsp;use<br>
