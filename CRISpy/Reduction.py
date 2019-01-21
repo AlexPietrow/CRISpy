@@ -6,6 +6,10 @@ import numpy as np
 import matplotlib.animation as animation
 from scipy import fftpack
 import matplotlib.pyplot as plt
+import pyana as pa
+
+import SaveLoad as sl
+import CRISpy as cp
 
 
 ###
@@ -34,7 +38,7 @@ def reverse_arr(lst):
 ###
 #taper_cube
 ###
-def taper_cube(cube_array,sm=1./16):
+def taper_cube(cube_array,sm=1./16, taper=1):
     '''
         multiplies edges of data with a smoothly decreasing taper to allow for easy FFT tiling and to avoid edge effects.
         
@@ -45,7 +49,7 @@ def taper_cube(cube_array,sm=1./16):
         (cube_array - np.median(cube_array)) * taper
         
         AUTHOR: Based on red_taper2 by Jaime and Mats adapted to python by Alex
-        '''
+    '''
     nz, nx, ny = cube_array.shape
     if nx <> ny:
         raise ValueError("Cube must be square! nx and ny are different sizes.")
@@ -65,11 +69,20 @@ def taper_cube(cube_array,sm=1./16):
     x[0:smx] = spx
     reverse_arr(spx)
     x[-smx:] = spx
+
     y[0:smy] = spy
     reverse_arr(spy)
     y[-smx:ny] = spy
-    taper = np.outer(x,y)
-    return (cube_array - np.median(cube_array)) * taper
+    taper_filt = np.outer(x,y)
+
+
+    dim = cube_array.shape[-1]
+    frame_median =  np.tile(np.median(cube_array, axis=[2,1]), (dim,dim,1)).T
+    #frame_median = np.median(cube_array[0])print(np.median(cube_array, axis=[2,1]))
+    
+    if taper == 1:
+        return (cube_array - frame_median)* taper_filt, frame_median
+    return (cube_array - frame_median), frame_median
 
 ###
 #binpic5d()
@@ -87,7 +100,20 @@ def binpic5d(cube_array_5d, n=4):
     a_view = cube_array_5d.reshape(s[0], s[1]/n, n, s[2]/n, n)
     return a_view.sum(axis=4).sum(axis=2)
 
-def PCA(cube_array, PCA_N):
+def rebin(cub, fac=2):
+    ns,nw,ny,nx = cub.shape
+
+    nx1 = nx//fac
+    ny1 = ny//fac
+    
+    res = np.zeros((ns, nw, ny1, nx1), dtype='float64')
+
+    for yy in range(ny1):
+        for xx in range(nx1):
+            res[:,:,yy,xx] = cub[:,:,yy*fac:yy*fac+fac, xx*fac:xx*fac+fac].mean(axis=(2,3))
+    return res
+
+def PCA(cube_array, PCA_N=False, cutoff=1, verbatim=0):
     '''
     Preform PCA on a 3d array.
     
@@ -134,24 +160,37 @@ def PCA(cube_array, PCA_N):
     
     # if we use all of the PCs we can reconstruct the noisy signal perfectly
     S = np.diag(s)
-    Mhat = np.dot(U, np.dot(S, V.T))
+    #Mhat = np.dot(U, np.dot(S, V.T))
     #print("Using all PCs, MSE = %.6G" %(np.mean((M - Mhat)**2)))
     
     # if we use only the first 20 PCs the reconstruction is less accurate
-    N = 1
-    Mhat2 = np.dot(U[:, :N], np.dot(S[:N, :N], V[:,:N].T))
+    N = cutoff
+    Mhat2 = np.dot(U[:, :N], np.dot(S[:N, :N], V[:,:N].T)).reshape(cube_array.shape)
+    mean_mhat = np.mean(Mhat2, axis=0)
+    pc = np.dot(S**0.5, V.T).reshape(cube_array.shape)
     #print("Using first 5 PCs, MSE = %.6G" %(np.mean((M - Mhat2)**2)))
     
-    a= np.median(cube_array, axis=0)
-    b= (s[0]**(1./2) * V[:,0]).reshape(cube_shape_x/n,cube_shape_y/n)
+    #a= np.median(cube_array, axis=0)
+    #b= (s[0]**(1./2) * V[:,0]).reshape(cube_shape_x/n,cube_shape_y/n)
+
+    if verbatim == True:
+        print(s)
+        plt.imshow(mean_mhat)
+        plt.show()
+
+    if PCA_N == False:
+        return mean_mhat, s, Mhat2, pc
+    
     
     def Mn(N):
         '''
         Give the Nth order of the PCA
         '''
-        mn = (np.dot(U[:,N,np.newaxis], np.dot(S[N,N,np.newaxis,np.newaxis], V[:,N,np.newaxis].T))).reshape(cube_shape_z,cube_shape_x/n,cube_shape_y/n)[0,:,:]
+        M = N-1
+        mn = (np.dot(U[:,M:N], np.dot(S[M:N,M:N], V[:,M:N].T))).reshape(cube_array.shape)[0,:,:]
         
         return mn
+    
     return Mn(PCA_N)
 
 def animatecrisp(cube, dim, nw, nt, cut=50, t=0, s=0, w=0, ns=4, interval=75, cmap='gray'):
@@ -223,7 +262,7 @@ def animatecrisp(cube, dim, nw, nt, cut=50, t=0, s=0, w=0, ns=4, interval=75, cm
     plt.show()
 
 
-def fftclean(cube_array, cut1=[417,430, 410,421], cut2=[430,443, 438,450], zoom=[410,460,410,460], plot=1):
+def fftclean(cube_array, cut=np.array([[443,449,436,441],[458,462,465,470],[440,445,451,456],[461,466,451,455],[428,430,452,454], [475,478,452,454], [489,495,452,458],[411,418,449,453]]), zoom=[410,460,410,460], plot=1, n=1,m=1, taper=1):
     '''
     Allows for simple FFT cleaning by removing two boxes around the FFT image.
     Remember to use taper_cube() before running!
@@ -241,48 +280,193 @@ def fftclean(cube_array, cut1=[417,430, 410,421], cut2=[430,443, 438,450], zoom=
     AUTHOR: Alex
     
     '''
-    red_cube_array = taper_cube(cube_array)
+    dim = cube_array.shape[-1]
+    frame_median =  np.tile(np.median(cube_array, axis=[2,1]), (dim,dim,1)).T
+    
+    red_cube_array, frame_median = taper_cube(cube_array, taper=taper)
+
+    
     
     #make image for mask.
     im_fft  = (fftpack.fft2(red_cube_array))
-    #take power to visualize what we are looking at. We only use this for images.
-    im_po   = fftpack.fftshift((np.conjugate(im_fft) * im_fft).real)
+    if plot:
+        #take power to visualize what we are looking at. We only use this for images.
     
-    im_mean = np.mean(im_po)
-    im_std = np.std(im_po)
+        im_po   = fftpack.fftshift((np.conjugate(im_fft) * im_fft).real)
+        
+        im_mean = np.mean(im_po)
+        im_std  = np.std(im_po)
     
-    im_mean_im = np.mean(red_cube_array)
-    im_std_im = np.std(red_cube_array)
+    im_mean_im  = np.median(red_cube_array[0])
+
+    im_std_im   = np.std(red_cube_array)
     
-    mask = np.empty_like(im_po[0])*0 + 1
-    mask[cut1[0]:cut1[1], cut1[2]:cut1[3]] = 0
-    mask[cut2[0]:cut2[1], cut2[2]:cut2[3]] = 0
-    
-    im_po_mask = im_po * mask
-    
-    #use FFT and not power to apply mask and get clean image
-    im_fft   = fftpack.fftshift(im_fft)
-    im_fft_mask = im_fft * mask
-    im_mask = fftpack.ifft2(fftpack.ifftshift(im_fft_mask))
+    mask = np.empty_like(red_cube_array[0])*0 + 1
+    for k in range((cut.shape[0])):
+        mask[cut[k,0]:cut[k,1], cut[k,2]:cut[k,3]] = 0
     
     if plot:
+        im_po_mask = im_po * mask
+    
+    #use FFT and not power to apply mask and get clean image
+    im_fft      = fftpack.fftshift(im_fft)
+    im_fft_mask = im_fft * mask
+    im_mask     = fftpack.ifft2(fftpack.ifftshift(im_fft_mask)).real + frame_median
+
+
+    if plot:
         plt.subplot(221)
-        plt.imshow(red_cube_array[0], vmin=im_mean_im-3*im_std_im, vmax=im_mean_im+3*im_std_im)
+        plt.imshow(red_cube_array[0], vmin=im_mean_im-n*im_std_im, vmax=im_mean_im+n*im_std_im)
         plt.colorbar()
         plt.subplot(222)
-        plt.imshow(im_po[0], vmin=im_mean-3*im_std, vmax=im_mean+3*im_std)
-        plt.xlim(zoom[0],zoom[1])
-        plt.ylim(zoom[2],zoom[3])
+        plt.imshow(im_po[0], vmin=im_mean-m*im_std, vmax=im_mean+m*im_std)
+        #plt.xlim(zoom[0],zoom[1])
+        #plt.ylim(zoom[2],zoom[3])
         plt.colorbar()
         plt.subplot(223)
-        plt.imshow(im_mask.real[0], vmin=im_mean_im-3*im_std_im, vmax=im_mean_im+3*im_std_im)
+        plt.imshow(im_mask[0], vmin=frame_median[0,0,0]-n*im_std_im, vmax=frame_median[0,0,0]+n*im_std_im)
         plt.colorbar()
         plt.subplot(224)
-        plt.imshow(im_po_mask[0], vmin=im_mean-3*im_std, vmax=im_mean+3*im_std)
-        plt.xlim(zoom[0],zoom[1])
-        plt.ylim(zoom[2],zoom[3])
+        plt.imshow(im_po_mask[0], vmin=im_mean-m*im_std, vmax=im_mean+m*im_std)
+        #plt.xlim(zoom[0],zoom[1])
+        #plt.ylim(zoom[2],zoom[3])
         plt.colorbar()
         plt.show()
     
-    return im_mask.real
+    return im_mask
 
+def stack_cube_5d(cube_array,n):
+    '''
+    Stack array into t/n scans.
+    INPUT:
+        cube_array  : 5d cube
+        n           : number of frames per stack
+        
+    OUTPUT:
+        Temporally binned frame of same shape as input and divided by n.
+    
+    '''
+    s = cube_array.shape
+    a_view = cube_array.reshape(s[0]/n, n, s[1], s[2], s[3], s[4])
+    a_sum = np.sum(a_view,axis=1)
+    return a_sum/n
+
+def power_spectrum(image, n=3, m=3):
+    '''
+    Shows powerspectrum of inputted image. 2D only
+    '''
+    image = image.reshape([1,image.shape[0],image.shape[1]])
+    red_cube_array = taper_cube(image)
+    #make image for mask.
+    im_fft  = (fftpack.fft2(image))
+    #take powenr to visualize what we are looking at. We only use this for images.
+    im_po   = fftpack.fftshift((np.conjugate(im_fft) * im_fft).real)[0]
+    im_mean = np.mean(im_po)
+    im_std = np.std(im_po)
+    i_mn = np.mean(image[0])
+    i_sd = np.std(image[0])
+    plt.subplot(121)
+    plt.title('Input')
+    plt.imshow(image[0], vmin=i_mn-n*i_sd, vmax=i_mn+n*i_sd)
+    plt.subplot(122)
+    plt.title('Power Spectrum')
+    plt.imshow(im_po, vmin=im_mean-m*im_std, vmax=im_mean+m*im_std)
+    #plt.xlim(450,510)
+    #plt.ylim(450,510)
+    plt.show()
+
+def fft_cube(cube_in, cube_out, cut=np.array([[417,430, 410,421],[430,443, 438,450],[441,442,452,455],[461,465,451,454],[428,430,452,454], [475,478,452,454]]), zoom=[410,460,410,460], plot=1):
+    '''
+    
+    '''
+    shape = cube_in.shape
+    print('Working on a cube of size: '+str(cube_in.shape))
+    for i in range(shape[1]):
+        if i == 1:
+            plot = 0
+        else:
+            plot = 0
+        for j in range(shape[2]):
+            percent = np.float(i*shape[2] +j)/(shape[1]*shape[2])
+            print(str(np.int(percent*100))+'% ')
+            cube_out[:,i,j] = fftclean(cube_in[:,i,j], cut1=cut, zoom=zoom, plot=plot)
+
+def stack_cube(cube, t0, tn, bin=2):
+    '''
+    
+    '''
+    
+    if bin > 1:
+        stacked = rebin(cube[t0], bin)
+        for ii in range(t0+1,tn):
+            print(str(ii)+' out of '+str(tn))
+            stacked += rebin(cube[ii], bin)
+            
+    if bin == 0 or bin ==1:
+        stacked = cube[t0].copy()
+        for ii in range(t0+1,tn):
+            print(str(ii)+' out of '+str(tn))
+            stacked += (cube[ii])
+
+    imean = stacked.mean(axis=(2,3))
+    return imean, stacked
+
+
+def interpolate_fringe(stacked, imean, wav_path='wav.8542.f0', do=1, pca=[0], edge=[0,-1]):
+    '''
+    Interpolate fringe from wing points onto entire line. 
+
+    INPUT: 
+         stacked : stacked cube from stack_cube()
+         imean   : a 3d pol cube. Probably output of stack_cube()
+         wav     : name of wav file
+    '''
+
+    print(wav_path)
+    wav =  pa.getdata(wav_path)
+    we  = (1.0-wav/wav.max())/2
+
+    if pca[-1] <> 0:
+        #pick 2 first and last frames and do PCA on them.
+        stacked_shape = stacked.shape
+        print(stacked_shape)
+        print('Using PCA to interpolate fringes...')
+        p0,p1,p2,p3 = pca
+        
+        if pca[-1] == 99: #use last frame
+            #we only apply this to S2 and S3
+            s2 = np.stack([PCA(stacked[1,p0:p1],PCA_N=1),PCA(stacked[1,p2:],PCA_N=1)], axis=0)
+            s3 = np.stack([PCA(stacked[2,p0:p1],PCA_N=1),PCA(stacked[2,p2:],PCA_N=1)], axis=0)
+            s0 = np.zeros_like(s2)
+
+            stot = np.stack([s0,s2,s3,s0],axis=0)
+
+        else:
+            s1 = np.stack([PCA(stacked[0,p0:p1],0),PCA(stacked[0,p2:p3],0)], axis=0)
+            s2 = np.stack([PCA(stacked[1,p0:p1],0),PCA(stacked[1,p2:p3],0)], axis=0)
+            s3 = np.stack([PCA(stacked[2,p0:p1],0),PCA(stacked[2,p2:p3],0)], axis=0)
+            s4 = np.stack([PCA(stacked[3,p0:p1],0),PCA(stacked[3,p2:p3],0)], axis=0)
+            stot = np.stack([s1,s2,s3,s4],axis=0)
+
+
+        
+        fringe = np.zeros(stacked.shape)
+        for ii in range(wav.size):
+            fringe[1,ii,:,:] = (stot[1,edge[0],:,:]*we[ii]/imean[0,edge[0]]  + (1.0-we[ii])*stot[1,edge[1],:,:]/imean[0,edge[1]]) * imean[0,ii]
+            fringe[2,ii,:,:] = (stot[2,edge[0],:,:]*we[ii]/imean[0,edge[0]]  + (1.0-we[ii])*stot[2,edge[1],:,:]/imean[0,edge[1]]) * imean[0,ii]
+            #Take outer two frames (asssume to be flat save for fringes.) and then make a interpolated mean fringe as function of the wavelength.
+        
+    else:
+        fringe = stacked *0
+        for ii in range(wav.size):
+            fringe[1,ii,:,:] = (stacked[1,edge[0],:,:]*we[ii]/imean[0,edge[0]]  + (1.0-we[ii])*stacked[1,edge[1],:,:]/imean[0,edge[1]]) * imean[0,ii]
+            fringe[2,ii,:,:] = (stacked[2,edge[0],:,:]*we[ii]/imean[0,edge[0]]  + (1.0-we[ii])*stacked[2,edge[1],:,:]/imean[0,edge[1]]) * imean[0,ii]
+
+    print(fringe.shape)
+    if do:
+        stacked[1:3] = stacked[1:3] - fringe[1:3]
+    result = stacked
+    result_shape = result.shape
+    result_shape = np.append(1,result_shape)
+    result = result.reshape(result_shape)
+    return result

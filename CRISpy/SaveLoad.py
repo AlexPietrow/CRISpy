@@ -1,12 +1,14 @@
 """
 Save and load routines to work with LPcubes and save fits or LPcubes
 """
+import sys
 import CRISpy as cp
 import CRISpy.Reduction as red
 
 import numpy as np
 import matplotlib.pyplot as plt
 import os
+from astropy.io import fits as f
 
 
 def make_header(image):
@@ -102,7 +104,7 @@ def write_buf(intensity, outfile, wave=None, stokes=False, sp=False, path=''):
         
         AUTHOR: OSLO crispex.py
         '''
-    import lpo as lp
+    #import lpo as lp
     
     if not stokes:
         nt, nx, ny, nw = intensity.shape
@@ -173,15 +175,16 @@ def save_lpcube(cube_array, name, stokes=True, sp=False, path=''):
     cube_array = cube_array.astype(np.float32)
     
     cube_shape = cube_array.shape
-    for i in range(cube_shape[0]):
-        for j in range(cube_shape[1]):
-            for k in range(cube_shape[2]):
-                cube_array[i,j,k] = np.rot90(cube_array[i,j,k],3)
-                cube_array[i,j,k] = np.flipud(cube_array[i,j,k])
+        #for i in range(cube_shape[0]):
+        #for j in range(cube_shape[1]):
+        #    for k in range(cube_shape[2]):
+        #        cube_array[i,j,k] = np.rot90(cube_array[i,j,k],3)
+        #       cube_array[i,j,k] = np.flipud(cube_array[i,j,k])
     
     new_cube = np.swapaxes(cube_array, 0,1)
     new_cube = np.swapaxes(new_cube, 2,3)
     new_cube = np.swapaxes(new_cube, 3,4)
+    new_cube = np.swapaxes(new_cube, 2,3) #fix y,x flip
     
     write_buf(new_cube, name, stokes=stokes, sp=False, path=path)
 
@@ -348,7 +351,7 @@ def full_cube_old(cube, nt , nw, ns=4, t0=0, size=860, bin=False):
 
     return im_mask_complete
 
-def full_cube(cube, nw, ns=4, trim=20):
+def full_cube(cube, nw, ns=4, trim=20, mode='r', dtype='float32'):
     '''
         Creates a 5D python readable from an lp cube. These files get big, so watch your RAM.
         INPUT:
@@ -367,20 +370,26 @@ def full_cube(cube, nw, ns=4, trim=20):
         returns a 5D cube in proper format
     '''
     if ns == 4 :
-        header = sl.header(cube)
-        nt = header[4]/nw/ns
-        nx = header[2]
-        ny = header[3]
-        cube_array =np.memmap(cube, shape=(nt,ns,nw,nx,ny), offset=512, dtype= 'int16', mode='r')
+        hheader = header(cube)
+        nt = hheader[4]/nw/ns
+        nx = hheader[2]
+        ny = hheader[3]
+        cube_array =np.memmap(cube, shape=(nt,ns,nw,ny,nx), offset=512, dtype=dtype, mode=mode)
     elif ns == 0 :
-        header = sl.header(cube)
-        nt = header[4]/nw
-        nx = header[2]
-        ny = header[3]
-        cube_array =np.memmap(cube, shape=(nt,nw,nx,ny), offset=512, dtype= 'int16', mode='r')
+        hheader = header(cube)
+        nt = hheader[4]/nw
+        nx = hheader[2]
+        ny = hheader[3]
+        cube_array =np.memmap(cube, shape=(nt,nw,ny,nx), offset=512, dtype= 'int16', mode=mode)
     else:
         raise ValueError("Stokes must be 0 or 4")
 
     return cube_array
 
 
+def size(cube, nw=23, ns=4):
+    hheader = header(cube)
+    nt = hheader[4]/nw/ns
+    nx = hheader[2]
+    ny = hheader[3]
+    return (nt,ns,nw,ny,nx)
