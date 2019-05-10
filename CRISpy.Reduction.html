@@ -19,9 +19,12 @@
     
 <tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
 <td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="matplotlib.animation.html">matplotlib.animation</a><br>
+<a href="CRISpy.html">CRISpy</a><br>
 </td><td width="25%" valign=top><a href="scipy.fftpack.html">scipy.fftpack</a><br>
-</td><td width="25%" valign=top><a href="numpy.html">numpy</a><br>
-</td><td width="25%" valign=top><a href="matplotlib.pyplot.html">matplotlib.pyplot</a><br>
+<a href="numpy.html">numpy</a><br>
+</td><td width="25%" valign=top><a href="pyana.html">pyana</a><br>
+<a href="matplotlib.pyplot.html">matplotlib.pyplot</a><br>
+</td><td width="25%" valign=top><a href="CRISpy.SaveLoad.html">CRISpy.SaveLoad</a><br>
 </td></tr></table></td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#eeaa77">
@@ -29,7 +32,7 @@
 <font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
     
 <tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
-<td width="100%"><dl><dt><a name="-PCA"><strong>PCA</strong></a>(cube_array, PCA_N)</dt><dd><tt>Preform&nbsp;PCA&nbsp;on&nbsp;a&nbsp;3d&nbsp;array.<br>
+<td width="100%"><dl><dt><a name="-PCA"><strong>PCA</strong></a>(cube_array, PCA_N<font color="#909090">=False</font>, cutoff<font color="#909090">=1</font>, verbatim<font color="#909090">=0</font>)</dt><dd><tt>Preform&nbsp;PCA&nbsp;on&nbsp;a&nbsp;3d&nbsp;array.<br>
 &nbsp;<br>
 INPUT:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;cube_array&nbsp;&nbsp;:&nbsp;name&nbsp;of&nbsp;3D&nbsp;numpy&nbsp;array&nbsp;that&nbsp;needs&nbsp;to&nbsp;be&nbsp;tapered.&nbsp;Cube&nbsp;must&nbsp;be&nbsp;square!<br>
@@ -58,6 +61,56 @@ AUTHOR:&nbsp;Alex&nbsp;(2016&nbsp;class)<br>
 #<br>
 #&nbsp;*&nbsp;since&nbsp;U&nbsp;and&nbsp;V&nbsp;both&nbsp;contain&nbsp;orthonormal&nbsp;vectors,&nbsp;U*V.T&nbsp;is&nbsp;equivalent<br>
 #&nbsp;&nbsp;&nbsp;to&nbsp;a&nbsp;whitened&nbsp;version&nbsp;of&nbsp;M.</tt></dd></dl>
+ <dl><dt><a name="-PCA_lambda_filt"><strong>PCA_lambda_filt</strong></a>(data, silent<font color="#909090">=0</font>, fignum<font color="#909090">=array([4, 6])</font>, cut<font color="#909090">=14</font>)</dt><dd><tt>Applies&nbsp;PCA&nbsp;filtering&nbsp;to&nbsp;the&nbsp;wavelength&nbsp;axis&nbsp;and&nbsp;subtracts&nbsp;the&nbsp;result&nbsp;from&nbsp;input<br>
+Works&nbsp;on&nbsp;Q&nbsp;and&nbsp;U&nbsp;<br>
+&nbsp;<br>
+INPUT<br>
+data&nbsp;&nbsp;&nbsp;:&nbsp;5D&nbsp;array<br>
+silent&nbsp;:&nbsp;does&nbsp;not&nbsp;show&nbsp;image&nbsp;if&nbsp;set<br>
+fignum&nbsp;:&nbsp;decides&nbsp;how&nbsp;many&nbsp;images&nbsp;there&nbsp;are&nbsp;in&nbsp;the&nbsp;plot<br>
+cut&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;frames&nbsp;that&nbsp;are&nbsp;cut.&nbsp;Default&nbsp;=&nbsp;14<br>
+&nbsp;<br>
+OUTPUT<br>
+Imput&nbsp;data&nbsp;-&nbsp;PCA&nbsp;noise</tt></dd></dl>
+ <dl><dt><a name="-WFA_par"><strong>WFA_par</strong></a>(data, L0, steps, steps_used, plot<font color="#909090">=1</font>, name<font color="#909090">=0</font>, t<font color="#909090">=0</font>)</dt><dd><tt>Gives&nbsp;parallel&nbsp;component&nbsp;of&nbsp;magnetic&nbsp;field&nbsp;using&nbsp;the&nbsp;weak&nbsp;field&nbsp;approximation.<br>
+&nbsp;<br>
+INPUT:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;data&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;datacube&nbsp;of&nbsp;shape&nbsp;[nt,ns,nL,nx,ny]<br>
+&nbsp;&nbsp;&nbsp;&nbsp;L0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;rest&nbsp;wavelength&nbsp;of&nbsp;observation&nbsp;in&nbsp;Angstrom<br>
+&nbsp;&nbsp;&nbsp;&nbsp;steps&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Array&nbsp;containing&nbsp;(relative)&nbsp;wavelengths&nbsp;of&nbsp;scan<br>
+&nbsp;&nbsp;&nbsp;&nbsp;steps_used&nbsp;&nbsp;Array&nbsp;containing&nbsp;the&nbsp;subselection&nbsp;of&nbsp;points&nbsp;that&nbsp;are&nbsp;used&nbsp;for&nbsp;WFA<br>
+&nbsp;&nbsp;&nbsp;&nbsp;plot&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;show&nbsp;plot<br>
+&nbsp;&nbsp;&nbsp;&nbsp;name&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;save&nbsp;figue&nbsp;under&nbsp;name.&nbsp;Default=0<br>
+&nbsp;&nbsp;&nbsp;&nbsp;t&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;time&nbsp;step&nbsp;used.&nbsp;Default=0<br>
+OUTPUT:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;wfa&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;array&nbsp;of&nbsp;shape&nbsp;[nx,&nbsp;ny]&nbsp;that&nbsp;contains&nbsp;weak&nbsp;field&nbsp;approximation<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<br>
+EXAMPLE:<br>
+&nbsp;<br>
+clean&nbsp;=&nbsp;|5D&nbsp;datacube&nbsp;[nt,ns,nL,nx,ny]|<br>
+steps&nbsp;=&nbsp;array([-0.88&nbsp;,&nbsp;-0.55&nbsp;,&nbsp;-0.495,&nbsp;-0.44&nbsp;,&nbsp;-0.385,&nbsp;-0.33&nbsp;,&nbsp;-0.275,&nbsp;-0.22&nbsp;,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-0.165,&nbsp;-0.11&nbsp;,&nbsp;-0.055,&nbsp;&nbsp;0.&nbsp;&nbsp;&nbsp;,&nbsp;&nbsp;0.055,&nbsp;&nbsp;0.11&nbsp;,&nbsp;&nbsp;0.165,&nbsp;&nbsp;0.22&nbsp;,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0.275,&nbsp;&nbsp;0.33&nbsp;,&nbsp;&nbsp;0.385,&nbsp;&nbsp;0.44&nbsp;,&nbsp;&nbsp;0.495,&nbsp;&nbsp;0.55&nbsp;,&nbsp;&nbsp;0.88&nbsp;])[2:-2]<br>
+<a href="#-WFA_par">WFA_par</a>(clean,&nbsp;8542,&nbsp;steps,&nbsp;[3,4,5,6,7,8,9,10,11,12,13,14],&nbsp;name='B_par_core.png',plot=0)</tt></dd></dl>
+ <dl><dt><a name="-WFA_perp"><strong>WFA_perp</strong></a>(data, L0, steps, steps_used, plot<font color="#909090">=1</font>, name<font color="#909090">=0</font>)</dt><dd><tt>Gives&nbsp;perpendicular&nbsp;component&nbsp;of&nbsp;magnetic&nbsp;field&nbsp;using&nbsp;the&nbsp;weak&nbsp;field&nbsp;approximation.<br>
+&nbsp;<br>
+INPUT:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;data&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;datacube&nbsp;of&nbsp;shape&nbsp;[nt,ns,nL,nx,ny]<br>
+&nbsp;&nbsp;&nbsp;&nbsp;L0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;rest&nbsp;wavelength&nbsp;of&nbsp;observation&nbsp;in&nbsp;Angstrom<br>
+&nbsp;&nbsp;&nbsp;&nbsp;steps&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Array&nbsp;containing&nbsp;(relative)&nbsp;wavelengths&nbsp;of&nbsp;scan<br>
+&nbsp;&nbsp;&nbsp;&nbsp;steps_used&nbsp;&nbsp;Array&nbsp;containing&nbsp;the&nbsp;subselection&nbsp;of&nbsp;points&nbsp;that&nbsp;are&nbsp;used&nbsp;for&nbsp;WFA<br>
+&nbsp;&nbsp;&nbsp;&nbsp;plot&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;show&nbsp;plot<br>
+&nbsp;&nbsp;&nbsp;&nbsp;name&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;save&nbsp;figue&nbsp;under&nbsp;name.&nbsp;Default=0<br>
+&nbsp;&nbsp;&nbsp;&nbsp;t&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;time&nbsp;step&nbsp;used.&nbsp;Default=0<br>
+&nbsp;&nbsp;&nbsp;&nbsp;OUTPUT:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;wfa&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;array&nbsp;of&nbsp;shape&nbsp;[nx,&nbsp;ny]&nbsp;that&nbsp;contains&nbsp;weak&nbsp;field&nbsp;approximation<br>
+&nbsp;<br>
+EXAMPLE:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;clean&nbsp;=&nbsp;|5D&nbsp;datacube&nbsp;[nt,ns,nL,nx,ny]|<br>
+&nbsp;&nbsp;&nbsp;&nbsp;steps&nbsp;=&nbsp;array([-0.88&nbsp;,&nbsp;-0.55&nbsp;,&nbsp;-0.495,&nbsp;-0.44&nbsp;,&nbsp;-0.385,&nbsp;-0.33&nbsp;,&nbsp;-0.275,&nbsp;-0.22&nbsp;,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-0.165,&nbsp;-0.11&nbsp;,&nbsp;-0.055,&nbsp;&nbsp;0.&nbsp;&nbsp;&nbsp;,&nbsp;&nbsp;0.055,&nbsp;&nbsp;0.11&nbsp;,&nbsp;&nbsp;0.165,&nbsp;&nbsp;0.22&nbsp;,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0.275,&nbsp;&nbsp;0.33&nbsp;,&nbsp;&nbsp;0.385,&nbsp;&nbsp;0.44&nbsp;,&nbsp;&nbsp;0.495,&nbsp;&nbsp;0.55&nbsp;,&nbsp;&nbsp;0.88&nbsp;])[2:-2]<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#-WFA_par">WFA_par</a>(clean,&nbsp;8542,&nbsp;steps,&nbsp;[3,4,5,6,7,8,9,10,11,12,13,14],&nbsp;name='B_par_core.png',plot=0)</tt></dd></dl>
  <dl><dt><a name="-animatecrisp"><strong>animatecrisp</strong></a>(cube, dim, nw, nt, cut<font color="#909090">=50</font>, t<font color="#909090">=0</font>, s<font color="#909090">=0</font>, w<font color="#909090">=0</font>, ns<font color="#909090">=4</font>, interval<font color="#909090">=75</font>, cmap<font color="#909090">='gray'</font>)</dt><dd><tt>crispex&nbsp;cubes&nbsp;are&nbsp;formated&nbsp;as&nbsp;an&nbsp;entire&nbsp;scan&nbsp;for&nbsp;one&nbsp;time&nbsp;and&nbsp;stokes.<br>
 &nbsp;<br>
 function&nbsp;is&nbsp;WIP</tt></dd></dl>
@@ -67,7 +120,12 @@ cube_array_5d&nbsp;:&nbsp;5d&nbsp;cube&nbsp;in&nbsp;the&nbsp;shape&nbsp;of&nbsp;
 n&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;bin&nbsp;size&nbsp;Default&nbsp;=&nbsp;4<br>
 OUTPUT:<br>
 binned&nbsp;cube&nbsp;with&nbsp;shape&nbsp;[nt,ns,nw,nx/n,ny/n]</tt></dd></dl>
- <dl><dt><a name="-fftclean"><strong>fftclean</strong></a>(cube_array, cut1<font color="#909090">=[417, 430, 410, 421]</font>, cut2<font color="#909090">=[430, 443, 438, 450]</font>, zoom<font color="#909090">=[410, 460, 410, 460]</font>, plot<font color="#909090">=1</font>)</dt><dd><tt>Allows&nbsp;for&nbsp;simple&nbsp;FFT&nbsp;cleaning&nbsp;by&nbsp;removing&nbsp;two&nbsp;boxes&nbsp;around&nbsp;the&nbsp;FFT&nbsp;image.<br>
+ <dl><dt><a name="-fft_cube"><strong>fft_cube</strong></a>(cube_in, cube_out, cut<font color="#909090">=array([[417, 430, 410, 421],
+       [430, 443, 4...28, 430, 452, 454],
+       [475, 478, 452, 454]])</font>, zoom<font color="#909090">=[410, 460, 410, 460]</font>, plot<font color="#909090">=1</font>)</dt></dl>
+ <dl><dt><a name="-fftclean"><strong>fftclean</strong></a>(cube_array, cut<font color="#909090">=array([[443, 449, 436, 441],
+       [458, 462, 4...89, 495, 452, 458],
+       [411, 418, 449, 453]])</font>, zoom<font color="#909090">=[410, 460, 410, 460]</font>, plot<font color="#909090">=1</font>, n<font color="#909090">=1</font>, m<font color="#909090">=1</font>, taper<font color="#909090">=1</font>)</dt><dd><tt>Allows&nbsp;for&nbsp;simple&nbsp;FFT&nbsp;cleaning&nbsp;by&nbsp;removing&nbsp;two&nbsp;boxes&nbsp;around&nbsp;the&nbsp;FFT&nbsp;image.<br>
 Remember&nbsp;to&nbsp;use&nbsp;<a href="#-taper_cube">taper_cube</a>()&nbsp;before&nbsp;running!<br>
 &nbsp;<br>
 INPUT:<br>
@@ -81,6 +139,14 @@ OUTPUT:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;imput&nbsp;array&nbsp;after&nbsp;filtering&nbsp;and&nbsp;diagnostic&nbsp;plot&nbsp;if&nbsp;plot=1.<br>
 &nbsp;<br>
 AUTHOR:&nbsp;Alex</tt></dd></dl>
+ <dl><dt><a name="-interpolate_fringe"><strong>interpolate_fringe</strong></a>(stacked, imean, wav_path<font color="#909090">='wav.8542.f0'</font>, do<font color="#909090">=1</font>, pca<font color="#909090">=[0]</font>, edge<font color="#909090">=[0, -1]</font>)</dt><dd><tt>Interpolate&nbsp;fringe&nbsp;from&nbsp;wing&nbsp;points&nbsp;onto&nbsp;entire&nbsp;line.&nbsp;<br>
+&nbsp;<br>
+INPUT:&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;stacked&nbsp;:&nbsp;stacked&nbsp;cube&nbsp;from&nbsp;<a href="#-stack_cube">stack_cube</a>()<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;imean&nbsp;&nbsp;&nbsp;:&nbsp;a&nbsp;3d&nbsp;pol&nbsp;cube.&nbsp;Probably&nbsp;output&nbsp;of&nbsp;<a href="#-stack_cube">stack_cube</a>()<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;wav&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;name&nbsp;of&nbsp;wav&nbsp;file</tt></dd></dl>
+ <dl><dt><a name="-power_spectrum"><strong>power_spectrum</strong></a>(image, n<font color="#909090">=3</font>, m<font color="#909090">=3</font>)</dt><dd><tt>Shows&nbsp;powerspectrum&nbsp;of&nbsp;inputted&nbsp;image.&nbsp;2D&nbsp;only</tt></dd></dl>
+ <dl><dt><a name="-rebin"><strong>rebin</strong></a>(cub, fac<font color="#909090">=2</font>)</dt></dl>
  <dl><dt><a name="-reverse_arr"><strong>reverse_arr</strong></a>(lst)</dt><dd><tt>reverses&nbsp;an&nbsp;array&nbsp;backwards&nbsp;(used&nbsp;by&nbsp;taper_cube)<br>
 &nbsp;<br>
 INPUT:<br>
@@ -89,7 +155,15 @@ OUTPUT:<br>
 reversed&nbsp;array<br>
 &nbsp;<br>
 AUTHOR:&nbsp;Alex?</tt></dd></dl>
- <dl><dt><a name="-taper_cube"><strong>taper_cube</strong></a>(cube_array, sm<font color="#909090">=0.0625</font>)</dt><dd><tt>multiplies&nbsp;edges&nbsp;of&nbsp;data&nbsp;with&nbsp;a&nbsp;smoothly&nbsp;decreasing&nbsp;taper&nbsp;to&nbsp;allow&nbsp;for&nbsp;easy&nbsp;FFT&nbsp;tiling&nbsp;and&nbsp;to&nbsp;avoid&nbsp;edge&nbsp;effects.<br>
+ <dl><dt><a name="-stack_cube"><strong>stack_cube</strong></a>(cube, t0, tn, bin<font color="#909090">=2</font>)</dt></dl>
+ <dl><dt><a name="-stack_cube_5d"><strong>stack_cube_5d</strong></a>(cube_array, n)</dt><dd><tt>Stack&nbsp;array&nbsp;into&nbsp;t/n&nbsp;scans.<br>
+INPUT:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;cube_array&nbsp;&nbsp;:&nbsp;5d&nbsp;cube<br>
+&nbsp;&nbsp;&nbsp;&nbsp;n&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;number&nbsp;of&nbsp;frames&nbsp;per&nbsp;stack<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<br>
+OUTPUT:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Temporally&nbsp;binned&nbsp;frame&nbsp;of&nbsp;same&nbsp;shape&nbsp;as&nbsp;input&nbsp;and&nbsp;divided&nbsp;by&nbsp;n.</tt></dd></dl>
+ <dl><dt><a name="-taper_cube"><strong>taper_cube</strong></a>(cube_array, sm<font color="#909090">=0.0625</font>, taper<font color="#909090">=1</font>)</dt><dd><tt>multiplies&nbsp;edges&nbsp;of&nbsp;data&nbsp;with&nbsp;a&nbsp;smoothly&nbsp;decreasing&nbsp;taper&nbsp;to&nbsp;allow&nbsp;for&nbsp;easy&nbsp;FFT&nbsp;tiling&nbsp;and&nbsp;to&nbsp;avoid&nbsp;edge&nbsp;effects.<br>
 &nbsp;<br>
 INPUT:<br>
 cube_array&nbsp;&nbsp;:&nbsp;name&nbsp;of&nbsp;3D&nbsp;numpy&nbsp;array&nbsp;that&nbsp;needs&nbsp;to&nbsp;be&nbsp;tapered.&nbsp;Cube&nbsp;must&nbsp;be&nbsp;square!<br>
