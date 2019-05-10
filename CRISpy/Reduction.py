@@ -470,3 +470,247 @@ def interpolate_fringe(stacked, imean, wav_path='wav.8542.f0', do=1, pca=[0], ed
     result_shape = np.append(1,result_shape)
     result = result.reshape(result_shape)
     return result
+
+
+def PCA_lambda_filt(data, silent=0, fignum=np.array([4,6]), cut=14):
+    '''
+    Applies PCA filtering to the wavelength axis and subtracts the result from input
+    Works on Q and U 
+
+    INPUT
+    data   : 5D array
+    silent : does not show image if set
+    fignum : decides how many images there are in the plot
+    cut    : frames that are cut. Default = 14
+
+    OUTPUT
+    Imput data - PCA noise
+    '''
+    #stokes Q
+    
+    mean_mhat, s, Mhat2, pc = PCA(data[1])
+
+    if not silent:
+        fig, axs = plt.subplots(fignum[0], fignum[1], figsize=(15, 6), facecolor='w', edgecolor='k')
+        fig.subplots_adjust(hspace = .5, wspace=.001)
+
+        axs = axs.ravel()
+        plt.title('Stokes Q')
+
+        for i in range(data.shape[1]):
+
+            axs[i].imshow(pc[i])
+            axs[i].set_title(str(i))
+
+        plt.show()
+
+    noise = np.sum(pc[cut:], axis=0)
+
+    data[1] = data[1] - noise
+
+    #Stokes U
+    mean_mhat, s, Mhat2, pc = PCA(data[1])
+
+    if not silent:
+        fig, axs = plt.subplots(fignum[0], fignum[1], figsize=(15, 6), facecolor='w', edgecolor='k')
+        fig.subplots_adjust(hspace = .5, wspace=.001)
+
+        axs = axs.ravel()
+        plt.title('Stokes U')
+
+        for i in range(data.shape[1]):
+
+            axs[i].imshow(pc[i])
+            axs[i].set_title(str(i))
+
+        plt.show()
+
+    noise = np.sum(pc[cut:], axis=0)
+
+    data[2] = data[2] - noise
+
+    data = np.array([data]) #add a dimention to the front
+
+    return data
+
+def WFA_par(data, L0, steps, steps_used, plot=1, name=0, t=0):
+    '''
+        Gives parallel component of magnetic field using the weak field approximation.
+        
+        INPUT:
+            data        datacube of shape [nt,ns,nL,nx,ny]
+            L0          rest wavelength of observation in Angstrom
+            steps       Array containing (relative) wavelengths of scan
+            steps_used  Array containing the subselection of points that are used for WFA
+            plot        show plot
+            name        save figue under name. Default=0
+            t           time step used. Default=0
+        OUTPUT:
+            wfa         array of shape [nx, ny] that contains weak field approximation
+            
+        EXAMPLE:
+        
+        clean = |5D datacube [nt,ns,nL,nx,ny]|
+        steps = array([-0.88 , -0.55 , -0.495, -0.44 , -0.385, -0.33 , -0.275, -0.22 ,
+                       -0.165, -0.11 , -0.055,  0.   ,  0.055,  0.11 ,  0.165,  0.22 ,
+                       0.275,  0.33 ,  0.385,  0.44 ,  0.495,  0.55 ,  0.88 ])[2:-2]
+        WFA_par(clean, 8542, steps, [3,4,5,6,7,8,9,10,11,12,13,14], name='B_par_core.png',plot=0)
+    '''
+    wfa = np.zeros_like(data)[0,0,0]
+    wfa_shape = wfa.shape
+    
+    I = data[0,0]
+    #make differentials between wavelength steps
+    dx = (steps - np.roll(steps,-1))[:,None,None] #make 3d-like so that it can be operated on
+    dx_p = (np.roll(steps, 1) - steps)[:,None,None]
+    
+    #
+    y1 = (I - np.roll(I, -1, axis=0))/dx
+    y2 = (np.roll(I, 1, axis=0) - I)/dx_p
+    
+    dI = (dx_p * y1 + dx * y2)/ (dx + dx_p)
+    dI[0]  = ((dx_p * y1 )/ ( dx_p))[0]       #Edges have to be done seperately
+    dI[-1] = ((dx * y2)/ (dx))[-1]
+    
+    const = 4.67e-13 * L0**2  * 1.1
+    
+    V = data[0,-1,]
+    
+    dI_sel = dI[steps_used]
+    V_sel = V[steps_used]
+    
+    wfa = -1* (V_sel * dI_sel).sum(axis=0) / (((dI_sel)**2).sum(axis=0) * const)
+    
+    
+    if plot:
+        plt.subplot(221)
+        plt.imshow(np.sum(I[steps_used], axis=0)/len(steps_used), cmap='gray')
+        plt.colorbar()
+        plt.title('Mean Stokes I')
+        plt.subplot(222)
+        plt.imshow(np.sum(V[steps_used], axis=0)/len(steps_used), cmap='gray')
+        plt.colorbar()
+        plt.title('Mean Stokes V')
+        plt.subplot(223)
+        plt.plot(np.arange(len(steps)),np.mean(I,axis=(1,2)))
+        plt.scatter(steps_used, np.mean(I,axis=(1,2))[steps_used])
+        plt.xlabel('wavelength_step')
+        plt.ylabel('counts')
+        plt.title('Mean I profile')
+        plt.subplot(224)
+        md = np.median(wfa)
+        sd = np.std(wfa)
+        plt.imshow(wfa, cmap='gray')
+        plt.title('Parallel Magnetic Field')
+        plt.colorbar()
+        plt.tight_layout()
+        if name:
+            plt.savefig(name, dpi = 300, bbox_inches='tight')
+        plt.show()
+    
+    return wfa
+
+def WFA_perp(data, L0, steps, steps_used, plot=1, name=0):
+    '''
+        Gives perpendicular component of magnetic field using the weak field approximation.
+        
+        INPUT:
+            data        datacube of shape [nt,ns,nL,nx,ny]
+            L0          rest wavelength of observation in Angstrom
+            steps       Array containing (relative) wavelengths of scan
+            steps_used  Array containing the subselection of points that are used for WFA
+            plot        show plot
+            name        save figue under name. Default=0
+            t           time step used. Default=0
+            OUTPUT:
+            wfa         array of shape [nx, ny] that contains weak field approximation
+        
+        EXAMPLE:
+            clean = |5D datacube [nt,ns,nL,nx,ny]|
+            steps = array([-0.88 , -0.55 , -0.495, -0.44 , -0.385, -0.33 , -0.275, -0.22 ,
+                           -0.165, -0.11 , -0.055,  0.   ,  0.055,  0.11 ,  0.165,  0.22 ,
+                           0.275,  0.33 ,  0.385,  0.44 ,  0.495,  0.55 ,  0.88 ])[2:-2]
+            WFA_par(clean, 8542, steps, [3,4,5,6,7,8,9,10,11,12,13,14], name='B_par_core.png',plot=0)
+            
+    '''
+    wfa = np.zeros_like(data)[0,0,0]
+    wfa_shape = wfa.shape
+    I = data[0,0]
+    Q = data[0,1]
+    U = data[0,2]
+    
+    dx = (steps - np.roll(steps,-1))[:,None,None] #make 3d-like so that it can be operated on
+    dx_p = (np.roll(steps, 1) - steps)[:,None,None]
+    
+    y1 = (I - np.roll(I, -1, axis=0))/dx
+    y2 = (np.roll(I, 1, axis=0) - I)/dx_p
+    
+    dI = (dx_p * y1 + dx * y2)/ (dx + dx_p)
+    dI[0]  = ((dx_p * y1 )/ ( dx_p))[0]       #Edges have to be done seperately
+    dI[-1] = ((dx * y2)/ (dx))[-1]
+    
+    const = 3./4 * (4.67e-13)**2 * L0**4  * 1.21
+    
+    steps_scale =  (steps[steps_used][:,None,None]) #1/(lambda_w - lambda)
+    
+    dI_sel = dI[steps_used] / steps_scale
+    
+    Q_sel = Q[steps_used]
+    U_sel = U[steps_used]
+    
+    B_Q2 = ( Q_sel *  dI_sel ).sum(axis=0) / ( const *  (  dI_sel**2).sum(axis=0) )
+    B_U2 = ( U_sel *  dI_sel ).sum(axis=0) / ( const *  (  dI_sel**2).sum(axis=0) )
+    
+    B2 = np.sqrt( B_Q2**2 + B_U2**2 )
+    B  = np.sqrt( B2 )
+    
+    wfa = B
+    
+    if plot:
+        plt.subplot(221)
+        midpoint = np.ceil(len(steps)/2.)
+        sumQ = 0
+        for i in range(len(steps_used)):
+            if steps_scale[i] > midpoint:
+                sumQ += Q_sel[i] * -1
+            else:
+                sumQ += Q_sel[i]
+    
+        plt.imshow(sumQ/len(steps_used), cmap='gray')
+        plt.colorbar()
+        plt.title('Mean Stokes Q')
+        
+        sumU = 0
+        for i in range(len(steps_used)):
+            if steps_scale[i] > midpoint:
+                sumU += U_sel[i] * -1
+            else:
+                sumU += U_sel[i]
+        
+        plt.subplot(222)
+        plt.imshow(sumU/len(steps_used), cmap='gray')
+        plt.colorbar()
+        plt.title('Mean Stokes U')
+        
+        plt.subplot(223)
+        plt.plot(np.arange(len(steps)),np.mean(I,axis=(1,2)))
+        plt.scatter(steps_used, np.mean(I,axis=(1,2))[steps_used])
+        plt.xlabel('wavelength_step')
+        plt.ylabel('counts')
+        plt.title('Mean I profile')
+        
+        plt.subplot(224)
+        sd = np.std(wfa)
+        mn = np.mean(wfa)
+        plt.imshow(wfa, cmap='gray')
+        plt.title('Transverse Magnetic Field')
+        plt.colorbar()
+        plt.tight_layout()
+        
+        if name:
+            plt.savefig(name, dpi = 300, bbox_inches='tight')
+        plt.show()
+
+    return wfa
+
+        

@@ -232,6 +232,30 @@ def restore_idl(name):
 
     return restore(name)
 
+def calc_scan_t(nlambda, nstates, nprefilter,nlines, pol=1):
+    '''
+    Calculate the length of one scan based on observational parameters.
+
+    INPUT
+    nlambda    : number of wavelength points
+    nstates    : number of states per point
+    nprefilter : number of used prefilters
+    nlines     : number of lines observed
+    pol        : 1 if using polarization and 0 otherwise 
+
+    OUTPUT
+    t          : time for one scan in seconds 
+    '''
+    if pol: #is there polarization?
+        stokes = 4
+    else:
+        stokes = 1
+
+    #2 frames lost for every shift in lambda    
+    nframes = (nlambda * (stokes*nstates+2)+10*(nprefilter-1)) * nlines
+    t       = nframes/36.5
+
+    return t
 
 
 
@@ -248,4 +272,41 @@ def restore_idl(name):
 
 
 
+def save_animated_cube(cube_array, name, fps=15, artist='me', cut=True, mn=0, sd=0, interval=75, cmap='hot'):
+    '''
+        animates a python cube and saves it
+        
+        INPUT:
+        cube_array  : name of 3D numpy array that needs to be animated.
+        name        : filename Should be .mp4
+        fps         : frames per second. Default = 15
+        artist      : name of creator. Defealt = 'me'
+        cut         : trims pixels off of the images edge to remove edge detector effects.
+        Default = True as 0 returns empty array.
+        mn          : mean of the cube | Used for contrast
+        sd          : std of the cube  | Used for contrast
+        interval    : #of ms between each frame.
+        cmap        : colormap. Default='hot'
+        
+        OUTPUT:
+        animated window going through the cube.
+        
+        '''
+    
+    fig = plt.figure()
+    std = np.std(cube_array[0])
+    mean = np.mean(cube_array[0])
+    if mn==sd and mn==0:
+        img = plt.imshow(cube_array[0][cut:-cut, cut:-cut], animated=True, vmax=mean+3*std, vmin=mean-3*std, cmap=cmap)
+    else:
+        img = plt.imshow(cube_array[0][cut:-cut, cut:-cut], animated=True, vmax=mn+3*sd, vmin=mn-3*sd, cmap=cmap)
 
+    def updatefig(i):
+        img.set_array(cube_array[i][cut:-cut, cut:-cut])
+        return img,
+
+    ani = animation.FuncAnimation(fig, updatefig, frames=cube_array.shape[0], interval=interval, blit=True)
+    plt.colorbar()
+    Writer = animation.writers['ffmpeg']
+    writer = Writer(fps=fps, metadata=dict(artist=artist), bitrate=1800)
+    ani.save(name, writer=writer)

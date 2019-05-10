@@ -375,14 +375,14 @@ def full_cube(cube, nw, ns=4, trim=20, mode='r', dtype='float32'):
         nx = hheader[2]
         ny = hheader[3]
         cube_array =np.memmap(cube, shape=(nt,ns,nw,ny,nx), offset=512, dtype=dtype, mode=mode)
-    elif ns == 0 :
+    elif ns == 1 :
         hheader = header(cube)
         nt = hheader[4]/nw
         nx = hheader[2]
         ny = hheader[3]
-        cube_array =np.memmap(cube, shape=(nt,nw,ny,nx), offset=512, dtype= 'int16', mode=mode)
+        cube_array =np.memmap(cube, shape=(nt,nw,ny,nx), offset=512, dtype= dtype, mode=mode)
     else:
-        raise ValueError("Stokes must be 0 or 4")
+        raise ValueError("Stokes must be 1 or 4")
 
     return cube_array
 
