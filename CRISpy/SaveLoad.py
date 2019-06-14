@@ -351,14 +351,14 @@ def full_cube_old(cube, nt , nw, ns=4, t0=0, size=860, bin=False):
 
     return im_mask_complete
 
-def full_cube(cube, nw, ns=4, trim=20, mode='r', dtype='float32'):
+def full_cube(cube, nw, ns=4, mode='r', dtype='float32'):
     '''
         Creates a 5D python readable from an lp cube. These files get big, so watch your RAM.
         INPUT:
         cube : filename, has to be .icube or .fcube
-        nw   : number of wavelength steps in the cube.
+        spnw : filename of spectral cube or number of wavelength steps in the cube.
         ns   : number of stokes parameters. Default = 4
-        trim : Trim off x pixels from each edge. Default = 20px
+        dtype: Type of data. Should be 'float32' for .fcubes and 'int16' for icubes.
         
         OUTPUT:
         5d cube of shape [nt,ns,nw,nx,ny]
@@ -369,20 +369,32 @@ def full_cube(cube, nw, ns=4, trim=20, mode='r', dtype='float32'):
         cube_new = full_cube(cube, 23)
         returns a 5D cube in proper format
     '''
-    if ns == 4 :
-        hheader = header(cube)
-        nt = hheader[4]/nw/ns
-        nx = hheader[2]
-        ny = hheader[3]
-        cube_array =np.memmap(cube, shape=(nt,ns,nw,ny,nx), offset=512, dtype=dtype, mode=mode)
-    elif ns == 1 :
-        hheader = header(cube)
-        nt = hheader[4]/nw
-        nx = hheader[2]
-        ny = hheader[3]
-        cube_array =np.memmap(cube, shape=(nt,nw,ny,nx), offset=512, dtype= dtype, mode=mode)
+    if type(spnw) is str:
+        if ns == 4 :
+            nx, ny, dum, ns, dtype, ndim = header(cube)
+            nw, nt, dum, ns, dtype, ndim = header(spnw)
+            cube_array = np.memmap(cube, shape=(nt,ns,nw,ny,nx), offset=512, dtype=dtype, mode=mode)
+        elif ns == 1 :
+            nx, ny, dum, dtype, ndim = lp.lphead(fil0)
+            nw, nt, dum, dtype, ndim = lp.lphead(fil1)
+            cube_array = np.memmap(cube, shape=(nt,nw,ny,nx), offset=512, dtype= dtype, mode=mode)
+            else:
+                raise ValueError("Stokes must be 1 or 4")
     else:
-        raise ValueError("Stokes must be 1 or 4")
+        if ns == 4 :
+            hheader = header(cube)
+            nt = hheader[4]/nw/ns
+            nx = hheader[2]
+            ny = hheader[3]
+            cube_array =np.memmap(cube, shape=(nt,ns,nw,ny,nx), offset=512, dtype=dtype, mode=mode)
+        elif ns == 1 :
+            hheader = header(cube)
+            nt = hheader[4]/nw
+            nx = hheader[2]
+            ny = hheader[3]
+            cube_array =np.memmap(cube, shape=(nt,nw,ny,nx), offset=512, dtype= dtype, mode=mode)
+        else:
+            raise ValueError("Stokes must be 1 or 4")
 
     return cube_array
 
