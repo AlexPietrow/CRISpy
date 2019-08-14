@@ -7,6 +7,4 @@ Find code documentation here: http://htmlpreview.github.io/?https://github.com/A
 The code is under constant development and shared publicly 'as is', however bug reports are engouraged. 
 
 ## Citing CRISpy
-If you have used CRISpy in your research, please cite Pietrow (2019). 
-
-The references can be found here: * [Pietrow (2019)](https://ui.adsabs.harvard.edu/abs/2019zndo...3229961P/abstract)
+If you have used CRISpy in your research, please cite [Pietrow (2019)](https://ui.adsabs.harvard.edu/abs/2019zndo...3229961P/abstract).
