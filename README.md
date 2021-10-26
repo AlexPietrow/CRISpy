@@ -9,6 +9,6 @@ Needs Pyana library: https://github.com/tvwerkhoven/pyana~~
 
 ~~The code is under constant development and shared publicly 'as is', however bug reports are encouraged.~~
 
-## ~~Citing CRISpy~~
-~~If you have used CRISpy in your research, please cite [Pietrow (2019)](https://ui.adsabs.harvard.edu/abs/2019zndo...3229961P/abstract).~~
+## Citing CRISpy
+If you have used CRISpy in your research, please cite [Pietrow (2019)](https://ui.adsabs.harvard.edu/abs/2019zndo...3229961P/abstract).
 
