@@ -1,3 +1,6 @@
+# Depricated
+This library is no longer updated as most of its functions are merged with [ISPy](https://github.com/ISP-SST/ISPy)
+
 # CRISpy
 Python module to work with CRISP data. 
 Needs Pyana library: https://github.com/tvwerkhoven/pyana
